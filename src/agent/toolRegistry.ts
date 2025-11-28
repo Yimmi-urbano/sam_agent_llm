@@ -267,6 +267,7 @@ export class ToolRegistry {
       const result = await executor(args, context);
       return result;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error(`Error executing tool: ${toolName}`, error);
       return {
         success: false,
@@ -372,6 +373,7 @@ export class ToolRegistry {
         data: response,
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error(`Error executing custom tool: ${customTool.name}`, error);
       return {
         success: false,

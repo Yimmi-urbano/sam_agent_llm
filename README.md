@@ -66,6 +66,7 @@ npm run test:coverage
 ## 📚 Documentación
 
 - **API Documentation (Swagger)**: http://localhost:3500/api-docs
+- [Guía de Despliegue en Plesk](./docs/plesk-deployment.md) 🚀
 - [Swagger Setup Guide](./docs/swagger-setup.md)
 - [Architecture](./docs/architecture.md)
 - [Runbook](./docs/runbook.md)

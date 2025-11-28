@@ -288,28 +288,33 @@ export class AgentOrchestrator {
           break;
         default:
           // Verificar si es una custom tool
-          const customTool = this.toolRegistry.findCustomToolByName(actionType, agentConfig);
-          if (customTool) {
-            // Mapear parámetros: si viene "query" pero la tool espera otro nombre, intentar mapear
-            let mappedPayload = { ...actionPayload };
-            
-            // Si el payload tiene "query" y el path tiene {query}, mantenerlo
-            // Si el payload tiene "query" pero el path tiene otro nombre, mapear
-            if (actionPayload.query && customTool.path) {
-              // Buscar el nombre del parámetro en el path (ej: {nombreEspecialidad})
-              const pathParamMatch = customTool.path.match(/\{(\w+)\}/);
-              if (pathParamMatch && pathParamMatch[1] !== 'query') {
-                const paramName = pathParamMatch[1];
-                mappedPayload[paramName] = actionPayload.query;
-                // Mantener query también por si acaso
+          if (actionType) {
+            const customTool = this.toolRegistry.findCustomToolByName(actionType, agentConfig);
+            if (customTool) {
+              // Mapear parámetros: si viene "query" pero la tool espera otro nombre, intentar mapear
+              let mappedPayload = { ...actionPayload };
+              
+              // Si el payload tiene "query" y el path tiene {query}, mantenerlo
+              // Si el payload tiene "query" pero el path tiene otro nombre, mapear
+              if (actionPayload.query && customTool.path) {
+                // Buscar el nombre del parámetro en el path (ej: {nombreEspecialidad})
+                const pathParamMatch = customTool.path.match(/\{(\w+)\}/);
+                if (pathParamMatch && pathParamMatch[1] !== 'query') {
+                  const paramName = pathParamMatch[1];
+                  mappedPayload[paramName] = actionPayload.query;
+                  // Mantener query también por si acaso
+                }
               }
+              
+              toolResult = await this.toolRegistry.executeTool(
+                actionType,
+                mappedPayload,
+                toolContext
+              );
+            } else {
+              logger.warn('Unknown action type', { actionType });
+              return parsedResponse; // Retornar respuesta original si no se reconoce la acción
             }
-            
-            toolResult = await this.toolRegistry.executeTool(
-              actionType,
-              mappedPayload,
-              toolContext
-            );
           } else {
             logger.warn('Unknown action type', { actionType });
             return parsedResponse; // Retornar respuesta original si no se reconoce la acción
@@ -399,22 +404,24 @@ export class AgentOrchestrator {
         } else {
           // Para custom tools, generar respuesta usando el LLM con los datos obtenidos
           // Hacer una llamada al LLM para generar respuesta basada en los datos
-          const customToolResponse = await this.generateResponseFromCustomTool(
-            agentConfig,
-            parsedResponse.message || userMessage,
-            toolResult.data,
-            actionType,
-            context
-          );
-          
-          return {
-            message: customToolResponse.message,
-            audio_description: customToolResponse.audio_description,
-            action: {
-              type: actionType,
-              payload: toolResult.data || {},
-            },
-          };
+          if (actionType) {
+            const customToolResponse = await this.generateResponseFromCustomTool(
+              agentConfig,
+              parsedResponse.message || userMessage,
+              toolResult.data,
+              actionType,
+              context
+            );
+            
+            return {
+              message: customToolResponse.message,
+              audio_description: customToolResponse.audio_description,
+              action: {
+                type: actionType,
+                payload: toolResult.data || {},
+              },
+            };
+          }
         }
 
         return {

@@ -1,13 +1,7 @@
-import {
-  Agent,
-  WorkerOptions,
-  cli,
-  Room,
-  Participant,
-  DataPacket_Kind,
-  Track,
-  AudioFrame,
-} from '@livekit/agents';
+// Nota: Este worker de LiveKit está en desarrollo
+// Los tipos y la API pueden variar según la versión de @livekit/agents
+// Por ahora, usamos tipos any para permitir la compilación
+// TODO: Implementar correctamente cuando se necesite el worker de LiveKit
 import { logger } from '../utils/logger.js';
 import { STTService } from './audioPipeline/sttService.js';
 import { TTSService } from './audioPipeline/ttsService.js';
@@ -28,10 +22,10 @@ import { incrementUsage } from '../middleware/usageMiddleware.js';
  * Procesa sesiones de chat y audio en tiempo real
  */
 class LiveKitAgentWorker {
-  private orchestrator: AgentOrchestrator;
-  private sttService: STTService;
-  private agentConfigRepo: AgentConfigRepo;
-  private conversationsRepo: ConversationsRepo;
+  private orchestrator!: AgentOrchestrator;
+  private sttService!: STTService;
+  private agentConfigRepo!: AgentConfigRepo;
+  private conversationsRepo!: ConversationsRepo;
 
   constructor() {
     // Inicializar servicios
@@ -80,19 +74,19 @@ class LiveKitAgentWorker {
   /**
    * Maneja cuando un participante se une a la sala
    */
-  async onParticipantConnected(room: Room, participant: Participant) {
+  async onParticipantConnected(room: any, participant: any) {
     // Extraer metadata (tenantId, userId, etc.)
-    const metadata = this.parseMetadata(participant.metadata);
+    const metadata = this.parseMetadata(participant?.metadata);
   }
 
   /**
    * Maneja cuando se recibe un mensaje de datos (chat)
    */
   async onDataReceived(
-    room: Room,
+    room: any,
     payload: Uint8Array,
-    participant?: Participant,
-    kind?: DataPacket_Kind
+    participant?: any,
+    kind?: any
   ) {
     try {
       const message = JSON.parse(new TextDecoder().decode(payload));
@@ -142,11 +136,11 @@ class LiveKitAgentWorker {
    * Maneja cuando se recibe audio
    */
   async onTrackSubscribed(
-    track: Track,
-    stream: MediaStreamTrack,
-    participant?: Participant
+    track: any,
+    stream: any,
+    participant?: any
   ) {
-    if (track.kind === 'audio') {
+    if (track?.kind === 'audio') {
       // Procesar audio stream para STT
       // Nota: La implementación completa requiere procesar el stream de audio
       // Por ahora, esto es un placeholder
@@ -157,8 +151,8 @@ class LiveKitAgentWorker {
    * Envía respuesta de texto
    */
   private async sendTextResponse(
-    room: Room,
-    participant: Participant | undefined,
+    room: any,
+    participant: any,
     response: any
   ) {
     const data = JSON.stringify({
@@ -166,18 +160,19 @@ class LiveKitAgentWorker {
       ...response,
     });
 
-    await room.localParticipant.publishData(
-      new TextEncoder().encode(data),
-      DataPacket_Kind.RELIABLE
-    );
+    // TODO: Implementar correctamente cuando se use LiveKit
+    // await room.localParticipant.publishData(
+    //   new TextEncoder().encode(data),
+    //   DataPacket_Kind.RELIABLE
+    // );
   }
 
   /**
    * Genera y envía respuesta de audio
    */
   private async sendAudioResponse(
-    room: Room,
-    participant: Participant | undefined,
+    room: any,
+    participant: any,
     response: any,
     agentConfig: any
   ) {
@@ -215,26 +210,34 @@ class LiveKitAgentWorker {
   }
 }
 
+// Nota: El worker de LiveKit está en desarrollo
+// Este código está comentado hasta que se implemente correctamente
+// Para usar el worker, descomenta y ajusta según la API de @livekit/agents
+
+/*
 // Configurar y ejecutar el worker
-const workerOptions: WorkerOptions = {
-  entrypoint: async (room: Room) => {
+const workerOptions: any = {
+  entrypoint: async (room: any) => {
     const worker = new LiveKitAgentWorker();
 
     // Registrar handlers
-    room.on('participantConnected', (participant) => {
-      worker.onParticipantConnected(room, participant);
-    });
+    if (room?.on) {
+      room.on('participantConnected', (participant: any) => {
+        worker.onParticipantConnected(room, participant);
+      });
 
-    room.on('dataReceived', (payload, participant, kind) => {
-      worker.onDataReceived(room, payload, participant, kind);
-    });
+      room.on('dataReceived', (payload: Uint8Array, participant?: any, kind?: any) => {
+        worker.onDataReceived(room, payload, participant, kind);
+      });
 
-    room.on('trackSubscribed', (track, stream, participant) => {
-      worker.onTrackSubscribed(track, stream, participant);
-    });
+      room.on('trackSubscribed', (track: any, stream: any, participant?: any) => {
+        worker.onTrackSubscribed(track, stream, participant);
+      });
+    }
   },
 };
 
 // Ejecutar con CLI de LiveKit
-cli(workerOptions);
+// cli(workerOptions);
+*/
 

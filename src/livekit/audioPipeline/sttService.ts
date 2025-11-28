@@ -53,7 +53,7 @@ export class STTService {
         throw new Error(`STT API error: ${response.status} - ${error}`);
       }
 
-      const result = await response.json();
+      const result = await response.json() as { text?: string };
       return result.text || '';
     } catch (error) {
       logger.error('STT transcription error', error);
