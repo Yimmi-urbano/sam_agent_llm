@@ -15,7 +15,7 @@
 import crypto from 'crypto';
 import readline from 'readline';
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32chars';
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'bccf34da741ac2aa43f99bfe8212499e6282242cba199d9e9fdd26ad4cadd49d';
 const ALGORITHM = 'aes-256-gcm';
 
 /**
@@ -48,7 +48,27 @@ function main() {
 
   // Si se proporciona la clave como argumento
   if (args.length > 0) {
-    const plainKey = args[0];
+    let plainKey = args[0].trim();
+    
+    // Detectar y remover comillas si están incluidas
+    if ((plainKey.startsWith('"') && plainKey.endsWith('"')) || 
+        (plainKey.startsWith("'") && plainKey.endsWith("'"))) {
+      console.warn('⚠️  Advertencia: Se detectaron comillas en la API key. Se removerán automáticamente.\n');
+      plainKey = plainKey.slice(1, -1).trim();
+    }
+    
+    // Validar que no esté vacía después de limpiar
+    if (!plainKey || plainKey.length === 0) {
+      console.error('❌ Error: La API key no puede estar vacía después de remover comillas y espacios');
+      process.exit(1);
+    }
+    
+    // Mostrar preview de la clave que se va a encriptar (solo primeros y últimos caracteres)
+    const preview = plainKey.length > 20 
+      ? `${plainKey.substring(0, 10)}...${plainKey.substring(plainKey.length - 4)}` 
+      : plainKey.substring(0, Math.min(plainKey.length, 10)) + '...';
+    console.log(`📝 Encriptando API key: ${preview} (${plainKey.length} caracteres)\n`);
+    
     const encryptedKey = encryptApiKey(plainKey);
     
     // Si la salida se está redirigiendo (para copiar al portapapeles), solo mostrar la clave

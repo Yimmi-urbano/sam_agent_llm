@@ -78,7 +78,25 @@ export class LLMRouter {
     tools?: Array<{ name: string; description: string; parameters: any }>
   ): Promise<LLMResponseWithTools> {
     const startTime = Date.now();
-    const decryptedApiKey = decryptApiKey(config.apiKeyEncrypted);
+    
+    // Validar que la API key encriptada exista
+    if (!config.apiKeyEncrypted) {
+      throw new Error(`API key is missing for provider ${config.provider}. Please configure the API key in the agent configuration.`);
+    }
+
+    // Desencriptar la API key con manejo de errores mejorado
+    let decryptedApiKey: string;
+    try {
+      decryptedApiKey = decryptApiKey(config.apiKeyEncrypted);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(
+        `Failed to decrypt API key for provider ${config.provider}. ` +
+        `This usually means the API key was encrypted with a different ENCRYPTION_KEY. ` +
+        `Please re-encrypt the API key using the current ENCRYPTION_KEY. ` +
+        `Original error: ${errorMessage}`
+      );
+    }
 
     try {
       switch (config.provider) {
