@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { logger } from './logger.js';
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32chars';
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'bccf34da741ac2aa43f99bfe8212499e6282242cba199d9e9fdd26ad4cadd49d';
 const ALGORITHM = 'aes-256-gcm';
 
 /**
